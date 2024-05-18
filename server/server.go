@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"iot/device"
 	"iot/message"
+	"iot/middlerware"
 	"iot/server/handler"
-	"iot/server/middleware"
 	"net"
 	"os"
 
@@ -14,18 +14,20 @@ import (
 
 type server struct {
 	Port        int
-	middlewares Middlewares
+	middlewares middlerware.Middlewares
 }
 
 func New(port int) *server {
 	return &server{
 		Port:        port,
-		middlewares: *GetMiddlewareInstance(),
+		middlewares: *middlerware.GetMiddlewareInstance(),
 	}
-
 }
 
 func (s *server) Run() {
+	for _, middleware := range s.middlewares.Middleware {
+		middleware.Controller()
+	}
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -62,11 +64,13 @@ func (s *server) Run() {
 		}
 		newDevice := device.Device{Conn: conn, ClientID: conn.RemoteAddr().String()}
 		deviceManager.Add(newDevice)
-		handler := handler.Handler{Connection: conn, DeviceManager: deviceManager, Logger: logger, Validator: validator, Decoder: decoder, Device: newDevice}
+		handler := handler.Handler{Connection: conn, DeviceManager: deviceManager, Logger: logger, Validator: validator,
+			Decoder: decoder, Device: newDevice, Middleware: &s.middlewares}
 		handler.Start()
+
 	}
 }
 
-func (s *server) Use(middleware middleware.Middleware) {
+func (s *server) Use(middleware middlerware.Middleware) {
 	s.middlewares.Add(middleware)
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"iot/device"
 	"iot/message"
-	"iot/server"
+	"iot/middlerware"
 	"net"
 
 	"github.com/go-kit/kit/log"
@@ -17,10 +17,10 @@ type Handler struct {
 	Device        device.Device
 	Validator     message.Validator
 	Decoder       message.Decoder
+	Middleware    *middlerware.Middlewares
 }
 
 func (h *Handler) Start() {
-	middlewares := server.GetMiddlewareInstance().Middleware
 	go func() {
 		defer func(Connection net.Conn) {
 			err := Connection.Close()
@@ -35,12 +35,13 @@ func (h *Handler) Start() {
 		buffer := make([]byte, 1024)
 		for {
 			n, err := h.Connection.Read(buffer)
+			body := buffer[:n]
+			h.Middleware.Inputs(h.Connection, string(body))
 			if err != nil {
 				fmt.Println("Error:", err)
 				h.Logger.Log("Get message with error: %v", err)
 				return
 			}
-			body := buffer[:n]
 			fmt.Printf("Received: %v\n", body)
 			if h.Validator.Validate(body) {
 				status, payload := h.Decoder.Decoder(body)
