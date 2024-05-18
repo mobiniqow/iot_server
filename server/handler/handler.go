@@ -2,10 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"github.com/go-kit/kit/log"
 	"iot/device"
 	"iot/message"
+	"iot/server"
 	"net"
+
+	"github.com/go-kit/kit/log"
 )
 
 type Handler struct {
@@ -18,12 +20,13 @@ type Handler struct {
 }
 
 func (h *Handler) Start() {
+	middlewares := server.GetMiddlewareInstance().Middleware
 	go func() {
 		defer func(Connection net.Conn) {
 			err := Connection.Close()
 			if err != nil {
-				panic(err)
 				h.Logger.Log("Connection closed with error: %v", err)
+				panic(err)
 			} else {
 				h.Logger.Log("Connection closed")
 			}
