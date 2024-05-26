@@ -1,6 +1,7 @@
 package try_job
 
 import (
+	"iot/message"
 	"net"
 	"time"
 )
@@ -16,9 +17,9 @@ const (
 
 type Job struct {
 	Conn             net.Conn
-	Content          string
+	Data             message.Message
 	Code             int16
-	MessageTryNumber int
+	MessageTryNumber int8
 	TimeCounter      time.Duration
-	IsSuccess        JobState
+	State            JobState
 }

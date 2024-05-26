@@ -23,3 +23,9 @@ func (dec *Decoder) Decoder(bytes []byte) (string, string) {
 	payload := string(bytes[2:])
 	return status, payload
 }
+
+func SplitMessage(data string) (Type, string, error) {
+	num := Type(data[:2])
+	fmt.Printf("number %s \n", num)
+	return Type(num), data[4:], nil
+}

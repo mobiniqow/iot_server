@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"iot/device"
 	"iot/message"
 	"iot/middlerware"
@@ -36,25 +35,31 @@ func (h *Handler) Start() {
 		for {
 			n, err := h.Connection.Read(buffer)
 			body := buffer[:n]
-			h.Middleware.Inputs(h.Connection, string(body))
+			content := string(body)
+			_type, payload, err := message.SplitMessage(content)
 			if err != nil {
-				fmt.Println("Error:", err)
-				h.Logger.Log("Get message with error: %v", err)
-				return
-			}
-			fmt.Printf("Received: %v\n", body)
-			if h.Validator.Validate(body) {
-				status, payload := h.Decoder.Decoder(body)
-				if status == string(message.GET_ID) {
-					h.Device.DeviceID = payload
-					h.Logger.Log("Received message with ID: %v", h.Device.DeviceID)
-					h.DeviceManager.Update(h.Device)
-				} else {
-					if h.Device.IsValid() {
-						print("yes bro")
+				h.Logger.Log("error from reading data %s from socket: %v", err, h.Connection)
+			} else {
+				message_data := message.Message{Payload: payload, Type: message.Type(_type)}
+				h.Middleware.Inputs(h.Connection, &message_data)
+				if err != nil {
+					h.Logger.Log("Get message with error: %v", err)
+					return
+				}
+				if h.Validator.Validate(body) {
+					status, payload := h.Decoder.Decoder(body)
+					if status == string(message.GET_ID) {
+						h.Device.DeviceID = payload
+						h.Logger.Log("Received message with ID: %v", h.Device.DeviceID)
+						h.DeviceManager.Update(h.Device)
+					} else {
+						if h.Device.IsValid() {
+							print("yes bro")
+						}
 					}
 				}
 			}
+
 		}
 	}()
 }

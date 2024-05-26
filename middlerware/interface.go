@@ -1,9 +1,12 @@
 package middlerware
 
-import "net"
+import (
+	"iot/message"
+	"net"
+)
 
 type Middleware interface {
 	Controller()
-	Output(net.Conn, error, string) (net.Conn, error)
-	Input(net.Conn, error, string) (net.Conn, error)
+	Output(*net.Conn, *message.Message) error
+	Input(*net.Conn, *message.Message) error
 }

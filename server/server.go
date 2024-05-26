@@ -5,6 +5,7 @@ import (
 	"iot/device"
 	"iot/message"
 	"iot/middlerware"
+	"iot/middlerware/try_job"
 	"iot/server/handler"
 	"net"
 	"os"
@@ -17,10 +18,10 @@ type server struct {
 	middlewares middlerware.Middlewares
 }
 
-func New(port int) *server {
+func New(port int, middlerware middlerware.Middlewares) *server {
 	return &server{
 		Port:        port,
-		middlewares: *middlerware.GetMiddlewareInstance(),
+		middlewares: middlerware,
 	}
 }
 
@@ -67,10 +68,9 @@ func (s *server) Run() {
 		handler := handler.Handler{Connection: conn, DeviceManager: deviceManager, Logger: logger, Validator: validator,
 			Decoder: decoder, Device: newDevice, Middleware: &s.middlewares}
 		handler.Start()
-
 	}
 }
 
-func (s *server) Use(middleware middlerware.Middleware) {
-	s.middlewares.Add(middleware)
+func (s *server) Use(middleware try_job.TryJob) {
+	s.middlewares.Add(&middleware)
 }
