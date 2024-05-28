@@ -17,7 +17,7 @@ func main() {
 	middlerware := middlerware.GetMiddlewareInstance()
 	middlerware.Add(&try_job.TryJob{
 		TryNumber: 3,
-		SleepTime: 1 * time.Second,
+		SleepTime: 6 * time.Second,
 		Jobs:      make(map[string]try_job.Job),
 	})
 	tcpServer := server.New(PORT, *middlerware)

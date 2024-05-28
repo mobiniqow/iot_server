@@ -1,6 +1,7 @@
 package message
 
 type Extention struct {
-	Name string
-	Code string
+	Name   string
+	Code   []byte
+	Length int
 }

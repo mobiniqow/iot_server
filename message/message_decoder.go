@@ -27,5 +27,5 @@ func (dec *Decoder) Decoder(bytes []byte) (string, string) {
 func SplitMessage(data string) (Type, string, error) {
 	num := Type(data[:2])
 	fmt.Printf("number %s \n", num)
-	return Type(num), data[4:], nil
+	return Type(num), data[2:], nil
 }

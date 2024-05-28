@@ -11,9 +11,9 @@ func JobKeyGenerator(conn net.Conn, message message.Message) string {
 }
 
 func ContentMaker(message message.Message) string {
-	extentions := ""
+	extentions := make([]byte, 0)
 	for _, extention := range message.Extentions {
-		extentions += extention.Code
+		extentions = append(extentions, extention.Code[:]...)
 	}
-	return fmt.Sprintf("%X%X%X\r\n", message.Type, message.Payload, extentions)
+	return fmt.Sprintf("%X%X%04X\r\n", message.Type, message.Payload, extentions)
 }

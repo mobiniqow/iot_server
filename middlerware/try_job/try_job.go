@@ -1,6 +1,7 @@
 package try_job
 
 import (
+	"encoding/hex"
 	"fmt"
 	"iot/device"
 	"iot/message"
@@ -14,7 +15,7 @@ const PERIOD = 100 * time.Millisecond
 
 var JOB_QUEUE int16 = 0
 
-const Name = "TRY_JOB"
+const Name = "OB"
 const CODE = 0xFAFA
 
 type TryJob struct {
@@ -55,7 +56,10 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 	_, ok := c.Jobs[key]
 	if ok {
 		messageCode := fmt.Sprintf("%04X%02X", c.Jobs[key].Code, c.Jobs[key].MessageTryNumber)
-		extention := message.Extention{Name: Name, Code: messageCode}
+		fmt.Printf("messageCode %v\n", messageCode)
+		hex, _ := hex.DecodeString(messageCode)
+		//number, _ := strconv.Atoi(messageCode)
+		extention := message.Extention{Name: Name, Code: hex, Length: 10}
 		data.Extentions = append(data.Extentions, extention)
 	} else {
 		JOB_QUEUE++
@@ -69,12 +73,20 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 		}
 		c.Jobs[key] = job
 		messageCode := fmt.Sprintf("%04X%02X", job.Code, job.MessageTryNumber)
-		extention := message.Extention{Name: Name, Code: messageCode}
+		fmt.Printf("messageCode %v\n", messageCode)
+		hex, _ := hex.DecodeString(messageCode)
+		extention := message.Extention{Name: Name, Code: hex, Length: 10}
 		data.Extentions = append(data.Extentions, extention)
 	}
 	return nil
 }
 
-func (c *TryJob) Input(con *net.Conn, message *message.Message) error {
+func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
+	if data.Type == message.JOBS {
+		fmt.Printf("pay load %s", data.Payload[len(data.Payload)-6:])
+		_byte, _ := hex.DecodeString(data.Payload)
+		fmt.Printf("message.Payload %v\n", _byte)
+		// check shavad ke payam baraye in user hast ya na
+	}
 	return nil
 }
