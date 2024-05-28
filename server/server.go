@@ -8,7 +8,6 @@ import (
 	"iot/middlerware/try_job"
 	"iot/server/handler"
 	"net"
-	"os"
 
 	"github.com/go-kit/kit/log"
 )
@@ -16,12 +15,14 @@ import (
 type server struct {
 	Port        int
 	middlewares middlerware.Middlewares
+	logger      log.Logger
 }
 
-func New(port int, middlerware middlerware.Middlewares) *server {
+func New(port int, logger log.Logger, middlerware middlerware.Middlewares) *server {
 	return &server{
 		Port:        port,
 		middlewares: middlerware,
+		logger:      logger,
 	}
 }
 
@@ -29,43 +30,38 @@ func (s *server) Run() {
 	for _, middleware := range s.middlewares.Middleware {
 		middleware.Controller()
 	}
-	var logger log.Logger
-	{
-		logger = log.NewLogfmtLogger(os.Stderr)
-		logger = log.NewSyncLogger(logger)
-		logger = log.With(logger, "service", "url", "iot_server", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
-	}
+
 	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", s.Port))
 	if err != nil {
-		logger.Log("Error", err)
+		s.logger.Log("Error", err)
 		return
 	}
 
 	if err != nil {
-		logger.Log("Error:", err)
+		s.logger.Log("Error:", err)
 		return
 	}
 	defer listener.Close()
-	defer logger.Log("server shutdown")
+	defer s.logger.Log("server shutdown")
 	// fmt.Println("Server is listening on port 8080")
-	logger.Log("Server is listening on port 8080")
+	s.logger.Log("Server is listening on port 8080")
 
-	deviceManager := device.GetInstanceManager(logger)
+	deviceManager := device.GetInstanceManager(s.logger)
 
 	validator := message.Validator{}
 
-	decoder := message.Decoder{Logger: logger}
+	decoder := message.Decoder{Logger: s.logger}
 
 	for {
 		// Accept incoming connections
 		conn, err := listener.Accept()
 		if err != nil {
-			logger.Log("Error:", err)
+			s.logger.Log("Error:", err)
 			continue
 		}
 		newDevice := device.Device{Conn: conn, ClientID: conn.RemoteAddr().String()}
 		deviceManager.Add(newDevice)
-		handler := handler.Handler{Connection: conn, DeviceManager: deviceManager, Logger: logger, Validator: validator,
+		handler := handler.Handler{Connection: conn, DeviceManager: deviceManager, Logger: s.logger, Validator: validator,
 			Decoder: decoder, Device: newDevice, Middleware: &s.middlewares}
 		handler.Start()
 	}

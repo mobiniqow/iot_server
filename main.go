@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/go-kit/kit/log"
 	"iot/device"
 	"iot/message"
 	"iot/middlerware"
@@ -14,13 +15,23 @@ import (
 
 func main() {
 	PORT := 8080
+
+	var logger log.Logger
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.NewSyncLogger(logger)
+		logger = log.With(logger, "service", "url", "iot_server", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+	}
 	middlerware := middlerware.GetMiddlewareInstance()
+
 	middlerware.Add(&try_job.TryJob{
-		TryNumber: 3,
-		SleepTime: 6 * time.Second,
+		TryNumber: 30,
+		SleepTime: 4 * time.Second,
 		Jobs:      make(map[string]try_job.Job),
+		Logger:    logger,
 	})
-	tcpServer := server.New(PORT, *middlerware)
+	tcpServer := server.New(PORT, logger, *middlerware)
+
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)

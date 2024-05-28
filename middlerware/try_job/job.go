@@ -8,6 +8,8 @@ import (
 
 type JobState int
 
+// dar ayande mitonim in ro handle konim ke shayad device payam ro khond vali natonest karo anjam bede
+
 const (
 	SUSPENDED JobState = iota
 	SUCCESS
@@ -18,7 +20,7 @@ const (
 type Job struct {
 	Conn             net.Conn
 	Data             message.Message
-	Code             int16
+	Code             []byte
 	MessageTryNumber int8
 	TimeCounter      time.Duration
 	State            JobState

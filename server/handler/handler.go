@@ -40,7 +40,7 @@ func (h *Handler) Start() {
 			if err != nil {
 				h.Logger.Log("error from reading data %s from socket: %v", err, h.Connection)
 			} else {
-				message_data := message.Message{Payload: payload, Type: message.Type(_type)}
+				message_data := message.Message{Payload: payload, Type: _type}
 				h.Middleware.Inputs(h.Connection, &message_data)
 				if err != nil {
 					h.Logger.Log("Get message with error: %v", err)

@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"encoding/binary"
 	"fmt"
 	"iot/message"
 	"net"
 )
 
 func JobKeyGenerator(conn net.Conn, message message.Message) string {
+	fmt.Printf("asdasdfasfd %s", message.Payload)
 	return fmt.Sprintf("%s:%s%s", conn.RemoteAddr().String(), message.Type, message.Payload)
 }
 
@@ -16,4 +18,8 @@ func ContentMaker(message message.Message) string {
 		extentions = append(extentions, extention.Code[:]...)
 	}
 	return fmt.Sprintf("%X%X%04X\r\n", message.Type, message.Payload, extentions)
+}
+
+func ByteArrayToInt(byteSlice []byte) (int, error) {
+	return int(binary.BigEndian.Uint64(byteSlice)), nil
 }

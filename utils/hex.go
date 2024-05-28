@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -79,6 +80,10 @@ func DecodedLen(x int) int { return x / 2 }
 // characters and that src has even length.
 // If the input is malformed, Decode returns the number
 // of bytes decoded before the error.
+func IntToByteArray(number int) ([]byte, error) {
+
+	return hex.DecodeString(fmt.Sprintf("%04x", number))
+}
 func Decode(dst, src []byte) (int, error) {
 	i, j := 0, 1
 	for ; j < len(src); j += 2 {
