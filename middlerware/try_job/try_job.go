@@ -66,9 +66,7 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 	_, ok := c.Jobs[key]
 	if ok {
 		messageCode := fmt.Sprintf("%04X%02X", c.Jobs[key].Code, c.Jobs[key].MessageTryNumber)
-
 		hex, _ := hex.DecodeString(messageCode)
-		//number, _ := strconv.Atoi(messageCode)
 		extention := message.Extention{Name: Name, Code: hex, Length: 10}
 		data.Extentions = append(data.Extentions, extention)
 	} else {
@@ -95,6 +93,7 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 }
 
 func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
+
 	if bytes.Equal(data.Type, message.JOBS) {
 		messageCode := data.Payload[:2]
 		sequenceNumber := data.Payload[2:]

@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"bytes"
 	"iot/device"
 	"iot/message"
+	"iot/message_broker/rabbitmq"
 	"iot/middlerware"
 	"net"
 
@@ -17,49 +19,63 @@ type Handler struct {
 	Validator     message.Validator
 	Decoder       message.Decoder
 	Middleware    *middlerware.Middlewares
+	MessageBroker rabbitmq.MessageBroker
+}
+
+// handle close connection device
+func (c *Handler) CloseConnection(Connection net.Conn) {
+	err := Connection.Close()
+	if err != nil {
+		c.Logger.Log("Connection closed with error: %v", err)
+		panic(err)
+	} else {
+		c.Logger.Log("Connection closed")
+	}
+	c.DeviceManager.Delete(c.Device)
 }
 
 func (h *Handler) Start() {
 	go func() {
-		defer func(Connection net.Conn) {
-			err := Connection.Close()
-			if err != nil {
-				h.Logger.Log("Connection closed with error: %v", err)
-				panic(err)
-			} else {
-				h.Logger.Log("Connection closed")
-			}
-			h.DeviceManager.Delete(h.Device)
-		}(h.Connection)
+		defer h.CloseConnection(h.Connection)
+		// buffer for reading data from socket
 		buffer := make([]byte, 1024)
+
 		for {
 			n, err := h.Connection.Read(buffer)
-			body := buffer[:n]
-			content := string(body)
-			_type, payload, err := message.SplitMessage(content)
 			if err != nil {
 				h.Logger.Log("error from reading data %s from socket: %v", err, h.Connection)
 			} else {
-				message_data := message.Message{Payload: payload, Type: _type}
-				h.Middleware.Inputs(h.Connection, &message_data)
-				if err != nil {
-					h.Logger.Log("Get message with error: %v", err)
-					return
-				}
+				body := buffer[:n]
+				_type, payload, err := h.Decoder.Decoder(body)
+				msg := message.NewMessage(_type, payload)
 				if h.Validator.Validate(body) {
-					status, payload := h.Decoder.Decoder(body)
-					if status == string(message.GET_ID) {
-						h.Device.DeviceID = payload
-						h.Logger.Log("Received message with ID: %v", h.Device.DeviceID)
-						h.DeviceManager.Update(h.Device)
+					if err != nil {
+						h.Logger.Log("error from reading data %s from socket: %v", err, h.Connection)
 					} else {
-						if h.Device.IsValid() {
-							print("yes bro")
+						// agar payami ke amad moshabeh id bod ono add konam be device haie mojod
+						if bytes.Equal(_type, message.GET_ID) {
+							h.Device.DeviceID = payload
+							h.DeviceManager.Update(h.Device)
+							h.Logger.Log("Received message with ID: %v", h.Device.DeviceID)
+						} else {
+							if h.Device.IsValid() {
+								h.MessageBroker.SendData(string(h.Device.DeviceID), *msg)
+								print("yes bro")
+							}
 						}
 					}
 				}
-			}
 
+				if err != nil {
+					h.Logger.Log("error from reading data %s from socket: %v", err, h.Connection)
+				} else {
+					_, err := h.Middleware.Inputs(h.Connection, msg)
+					if err != nil {
+						h.Logger.Log("Get message with error: %v", err)
+						return
+					}
+				}
+			}
 		}
 	}()
 }

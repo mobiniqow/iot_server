@@ -1,6 +1,7 @@
 package device
 
 import (
+	"bytes"
 	"errors"
 	"github.com/go-kit/kit/log"
 	"iot/message"
@@ -14,18 +15,23 @@ type Manager struct {
 	Devices     []Device
 	Logger      log.Logger
 	Middlewares middlerware.Middlewares
+	decoder     message.Decoder
 }
 
 var instance *Manager
 var one sync.Once
 
 func GetInstanceManager(logger log.Logger) *Manager {
+
 	if instance == nil {
 		one.Do(func() {
 			instance = &Manager{
 				Devices:     make([]Device, 0),
 				Logger:      logger,
 				Middlewares: *middlerware.GetMiddlewareInstance(),
+				decoder: message.Decoder{
+					Logger: logger,
+				},
 			}
 		})
 	}
@@ -44,11 +50,18 @@ func (c *Manager) Add(device Device) error {
 	c.Devices = append(c.Devices, device)
 	return nil
 }
-
+func (c *Manager) GetDeviceByDeviceId(deviceId string) (Device, error) {
+	for _, element := range c.Devices {
+		if bytes.Equal(element.DeviceID, []byte(deviceId)) {
+			return element, nil
+		}
+	}
+	return Device{}, errors.New("Device not exist")
+}
 func (c *Manager) Delete(device Device) error {
 	var selectedDevice int = -1
 	for index, element := range c.Devices {
-		if element.ClientID == device.ClientID || element.Conn == device.Conn || element.DeviceID == device.DeviceID {
+		if element.ClientID == device.ClientID || element.Conn == device.Conn || bytes.Equal(element.DeviceID, device.DeviceID) {
 			selectedDevice = index
 			break
 		}
@@ -63,10 +76,12 @@ func (c *Manager) Delete(device Device) error {
 }
 
 func (c *Manager) Update(device Device) error {
-	var isExist bool = false
-	for _, element := range c.Devices {
+	var isExist = false
+	for key, element := range c.Devices {
 		if element.ClientID == device.ClientID {
-			element = device
+			updatedDevice := c.Devices[key]
+			updatedDevice = device
+			c.Devices[key] = updatedDevice
 			isExist = true
 			break
 		}
@@ -80,7 +95,7 @@ func (c *Manager) Update(device Device) error {
 
 func (c *Manager) Get(device Device) (Device, error) {
 	for _, element := range c.Devices {
-		if element.ClientID == device.ClientID || element.Conn == device.Conn || element.DeviceID == device.DeviceID {
+		if element.ClientID == device.ClientID || element.Conn == device.Conn || bytes.Equal(element.DeviceID, device.DeviceID) {
 
 			return element, nil
 		}
@@ -108,5 +123,19 @@ func (c *Manager) SendMessage(conn net.Conn, data *message.Message) error {
 	}
 	content := utils.ContentMaker(*data)
 	conn.Write([]byte(content))
+	return nil
+}
+func (c *Manager) SendMessageWithDeviceId(deviceId string, _type, payload, date string) error {
+	device, err := c.GetDeviceByDeviceId(deviceId)
+	if err != nil {
+		return err
+	}
+	msg := message.Message{
+		Extentions: make([]message.Extention, 0),
+		Type:       []byte(_type),
+		Payload:    []byte(payload),
+		Date:       date,
+	}
+	c.SendMessage(device.Conn, &msg)
 	return nil
 }

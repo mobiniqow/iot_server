@@ -6,7 +6,7 @@ import (
 
 type Device struct {
 	ClientID string
-	DeviceID string
+	DeviceID []byte
 	Conn     net.Conn
 }
 
