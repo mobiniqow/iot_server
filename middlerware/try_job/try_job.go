@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/go-kit/kit/log"
+	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
 	"iot/utils"
@@ -26,6 +27,7 @@ type TryJob struct {
 	Jobs          map[string]Job
 	Logger        log.Logger
 	DeviceManager *device.Manager
+	BroadCaster   *brodcaster.BroadCaster
 }
 
 // todo bayad ersal konam va sare har ersal ye shomare bezanam va vaghty packet ersal shode hast va dobare ersal kard
@@ -52,7 +54,7 @@ func (c *TryJob) Controller() {
 						c.Logger.Log("device not found", v.Conn.RemoteAddr().String())
 						continue
 					}
-					c.DeviceManager.SendMessage(_device, &job.Data)
+					c.BroadCaster.SendMessage(_device, &job.Data)
 					if job.MessageTryNumber >= c.TryNumber {
 						job.State = END
 						c.Jobs[k] = job

@@ -2,10 +2,10 @@ package server
 
 import (
 	"fmt"
+	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
 	"iot/message_broker/rabbitmq"
-	"iot/middlerware"
 	"iot/middlerware/try_job"
 	"iot/server/handler"
 	"net"
@@ -15,24 +15,27 @@ import (
 
 type server struct {
 	Port          int
-	middlewares   middlerware.Middlewares
 	logger        log.Logger
-	messagebroker rabbitmq.MessageBroker
+	messageBroker rabbitmq.MessageBroker
 	DeviceManager *device.Manager
+	BroadCaster   *brodcaster.BroadCaster
 }
 
-func New(port int, logger log.Logger, middlerware middlerware.Middlewares, messageBroker rabbitmq.MessageBroker, manager *device.Manager) *server {
+func New(port int, logger log.Logger,
+	messageBroker rabbitmq.MessageBroker, manager *device.Manager,
+	broadCaster *brodcaster.BroadCaster,
+) *server {
 	return &server{
 		Port:          port,
-		middlewares:   middlerware,
 		logger:        logger,
-		messagebroker: messageBroker,
+		messageBroker: messageBroker,
 		DeviceManager: manager,
+		BroadCaster:   broadCaster,
 	}
 }
 
 func (c *server) Run() {
-	for _, middleware := range c.middlewares.Middleware {
+	for _, middleware := range c.BroadCaster.MiddleWares.Middleware {
 		middleware.Controller()
 	}
 
@@ -55,7 +58,7 @@ func (c *server) Run() {
 
 	decoder := message.Decoder{Logger: c.logger}
 	// rabbit mq consumer run
-	go c.messagebroker.Run()
+	go c.messageBroker.Run()
 	for {
 		// Accept incoming connections
 		conn, err := listener.Accept()
@@ -67,14 +70,14 @@ func (c *server) Run() {
 
 		c.DeviceManager.Add(newDevice)
 		handler := handler.Handler{Connection: conn, DeviceManager: c.DeviceManager, Logger: c.logger,
-			Validator: validator, Decoder: decoder, Device: newDevice, Middleware: &c.middlewares,
+			Validator: validator, Decoder: decoder, Device: newDevice, Middleware: c.BroadCaster.MiddleWares,
 			//MessageBroker: rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", c.logger)
-			MessageBroker: c.messagebroker,
+			MessageBroker: c.messageBroker,
 		}
 		handler.Start()
 	}
 }
 
 func (c *server) Use(middleware try_job.TryJob) {
-	c.middlewares.Add(&middleware)
+	c.BroadCaster.MiddleWares.Add(&middleware)
 }

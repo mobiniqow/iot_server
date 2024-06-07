@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/wagslane/go-rabbitmq"
+	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
 	"iot/message_broker/gateway"
@@ -19,7 +20,7 @@ type MessageBroker struct {
 	Gateway       *gateway.Gateway
 }
 
-func NewMessageBroker(url string, logger log.Logger, _gateway *gateway.Gateway, deviceManager *device.Manager) MessageBroker {
+func NewMessageBroker(url string, logger log.Logger, _gateway *gateway.Gateway, deviceManager *device.Manager, brodCaster *brodcaster.BroadCaster) MessageBroker {
 	producer := Producer{
 		RoutingKey: "backend_routing_key",
 		Exchange:   "backend_exchange",
@@ -30,6 +31,7 @@ func NewMessageBroker(url string, logger log.Logger, _gateway *gateway.Gateway, 
 		DeviceManager: deviceManager,
 		Logger:        logger,
 		Gateway:       _gateway,
+		BroadCaster:   brodCaster,
 	}
 	consumer := Consumer{
 		RoutingKey: "socket_server_routing_key",

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"github.com/go-kit/kit/log"
+	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
 	"iot/message_broker/gateway"
@@ -17,6 +18,7 @@ import (
 
 const (
 	SCHEDULE = "SD"
+	SETTINGS = "CD"
 )
 
 func main() {
@@ -28,20 +30,28 @@ func main() {
 		logger = log.With(logger, "service", "url", "iot_server", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 	}
 	_middleware := middlerware.GetMiddlewareInstance()
-	deviceManager := device.Manager{Devices: make([]device.Device, 0), Logger: logger, Middlewares: *_middleware}
+	deviceManager := device.Manager{Devices: make([]device.Device, 0), Logger: logger}
+	broadCaster := brodcaster.BroadCaster{MiddleWares: _middleware}
+	_middleware.Add(&try_job.TryJob{
+		TryNumber:     30,
+		SleepTime:     5 * time.Second,
+		Jobs:          make(map[string]try_job.Job),
+		Logger:        logger,
+		DeviceManager: &deviceManager,
+		BroadCaster:   &broadCaster,
+	})
+
 	_gateway := gateway.NewGateway(logger)
 	scheduleStrategy := strategy.ScheduleStrategy{
 		StrategyCode: SCHEDULE, DeviceManager: &deviceManager}
+	settingsStrategy := strategy.SettingsStrategy{
+		StrategyCode: SETTINGS, DeviceManager: &deviceManager,
+	}
 	_gateway.AddStrategy(&scheduleStrategy)
-	_middleware.Add(&try_job.TryJob{
-		TryNumber: 30,
-		SleepTime: 10 * time.Second,
-		Jobs:      make(map[string]try_job.Job),
-		Logger:    logger,
-	})
+	_gateway.AddStrategy(&settingsStrategy)
 
-	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager)
-	tcpServer := server.New(PORT, logger, *_middleware, messageBroker, &deviceManager)
+	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager, &broadCaster)
+	tcpServer := server.New(PORT, logger, messageBroker, &deviceManager, &broadCaster)
 
 	go func() {
 		for {
@@ -58,7 +68,7 @@ func main() {
 				Payload:    payload,
 				Date:       datetime,
 			}
-			deviceManager.SendMessage(deviceManager.Devices[0], &message)
+			broadCaster.SendMessage(deviceManager.Devices[0], &message)
 		}
 	}()
 

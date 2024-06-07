@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/wagslane/go-rabbitmq"
+	"iot/brodcaster"
 	"iot/device"
 	"iot/message_broker/gateway"
 	"iot/utils"
@@ -13,6 +14,7 @@ type ConsumerHandler struct {
 	Logger        log.Logger
 	DeviceManager *device.Manager
 	Gateway       *gateway.Gateway
+	BroadCaster   *brodcaster.BroadCaster
 }
 
 func (c *ConsumerHandler) Handler(d rabbitmq.Delivery) rabbitmq.Action {
@@ -23,6 +25,12 @@ func (c *ConsumerHandler) Handler(d rabbitmq.Delivery) rabbitmq.Action {
 	//fmt.Printf("date %s \n", date)'
 
 	fmt.Printf("_message %s\n", _message)
-	c.DeviceManager.SendMessageWithDeviceId(deviceId, _message)
+	device, err := c.DeviceManager.GetDeviceByDeviceId(deviceId)
+	if err != nil {
+		println(err.Error())
+	} else {
+		c.BroadCaster.SendMessage(device, &_message)
+	}
+
 	return rabbitmq.Ack
 }

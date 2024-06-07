@@ -3,32 +3,29 @@ package device
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/go-kit/kit/log"
 	"iot/message"
-	"iot/middlerware"
-	"iot/utils"
 	"net"
 )
 
 type Manager struct {
-	Devices     []Device
-	Logger      log.Logger
-	Middlewares middlerware.Middlewares
-	decoder     message.Decoder
+	Devices []Device
+	Logger  log.Logger
+	//Middlewares middlerware.Middlewares
+	decoder message.Decoder
 }
 
 func NewDeviceManager(logger log.Logger) *Manager {
 
 	return &Manager{
-		Devices:     make([]Device, 0),
-		Logger:      logger,
-		Middlewares: *middlerware.GetMiddlewareInstance(),
+		Devices: make([]Device, 0),
+		Logger:  logger,
+		//Middlewares: *middlerware.GetMiddlewareInstance(),
 		decoder: message.Decoder{
 			Logger: logger,
 		},
 	}
-	  
+
 }
 
 func (c *Manager) Add(device Device) error {
@@ -103,35 +100,23 @@ func (c *Manager) Get(device Device) (Device, error) {
 	return device, errors.New("device not exist")
 }
 
-//func (c *Manager) SendMessage(conn net.Conn, message []byte) error {
-//	data := make(map[string]string)
-//	data["content"] = string(message)
-//	_, err := c.Middlewares.Output(conn, &data)
+//func (c *Manager) SendMessage(device Device, _message *message.Message) error {
+//	fmt.Printf("_message.Type %s ,_message.Payload %s\n", _message.Type, _message.Payload)
+//	_, err := c.Middlewares.Output(device.Conn, _message)
 //	if err != nil {
 //		return err
 //	}
-//	content := utils.ContentMaker(data)
-//	conn.Write([]byte(content))
+//	content := utils.ContentMaker(*_message)
+//	device.Conn.Write([]byte(content))
 //	return nil
 //}
-
-func (c *Manager) SendMessage(device Device, _message *message.Message) error {
-	fmt.Printf("_message.Type %s ,_message.Payload %s\n", _message.Type, _message.Payload)
-	_, err := c.Middlewares.Output(device.Conn, _message)
-	if err != nil {
-		return err
-	}
-	content := utils.ContentMaker(*_message)
-	device.Conn.Write([]byte(content))
-	return nil
-}
-
-func (c *Manager) SendMessageWithDeviceId(deviceId string, _message message.Message) error {
-
-	device, err := c.GetDeviceByDeviceId(deviceId)
-	if err != nil {
-		return err
-	}
-	c.SendMessage(device, &_message)
-	return nil
-}
+//
+//func (c *Manager) SendMessageWithDeviceId(deviceId string, _message message.Message) error {
+//
+//	device, err := c.GetDeviceByDeviceId(deviceId)
+//	if err != nil {
+//		return err
+//	}
+//	c.SendMessage(device, &_message)
+//	return nil
+//}
