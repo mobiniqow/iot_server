@@ -9,7 +9,7 @@ type Consumer struct {
 	Queue      string
 	Exchange   string
 	RoutingKey string
-	Handler    func(rabbitmq.Delivery) rabbitmq.Action
+	Handler    ConsumerHandler
 	Logger     log.Logger
 }
 
@@ -27,7 +27,7 @@ func (c *Consumer) Run(mq *rabbitmq.Conn) {
 	}
 	defer consumer.Close()
 
-	err = consumer.Run(c.Handler)
+	err = consumer.Run(c.Handler.Handler)
 
 	if err != nil {
 		c.Logger.Log(err)

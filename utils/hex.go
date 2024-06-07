@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -352,4 +354,33 @@ func (h *dumper) Close() (err error) {
 	h.rightChars[nBytes+1] = '\n'
 	_, err = h.w.Write(h.rightChars[:nBytes+2])
 	return
+}
+func IntToHex(number int) string {
+	return fmt.Sprintf("%X", number)
+}
+func BinaryToHex(binary string) string {
+	if i, err := strconv.ParseInt(binary, 2, 64); err != nil {
+		fmt.Println(err)
+	} else {
+		return fmt.Sprintf("%04X", i)
+	}
+	return "0000"
+}
+
+func HexToBinary(_hex string) string {
+	n := new(big.Int)
+	number, _ := n.SetString(_hex, 16)
+	return strconv.FormatInt(number.Int64(), 2)
+
+}
+func HexToByte(_hex string) ([]byte, error) {
+	data, err := hex.DecodeString(_hex)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+func BinaryToByte(binary string) ([]byte, error) {
+	_hex := BinaryToHex(binary)
+	return HexToByte(_hex)
 }

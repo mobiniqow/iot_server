@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"iot/message"
 	"net"
+	"strings"
 )
 
 func JobKeyGenerator(conn net.Conn, message message.Message) string {
-	return fmt.Sprintf("%s:%s%s%s", conn.RemoteAddr().String(), message.Type, message.Payload, message.Date)
+	return fmt.Sprintf("%s:%s%s%s", conn.RemoteAddr().String(), message.Type, message.Payload)
 }
 
 func ContentMaker(message message.Message) string {
@@ -25,8 +26,10 @@ func ByteArrayToInt(byteSlice []byte) (int, error) {
 }
 
 func StringToMap(data string) map[string]interface{} {
+	_data := strings.Replace(data, "'", "\"", -1)
 	sec := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(string(data)), &sec); err != nil {
+	if err := json.Unmarshal([]byte(_data), &sec); err != nil {
+		fmt.Printf("error %v \n", err)
 		panic(err)
 	}
 	return sec

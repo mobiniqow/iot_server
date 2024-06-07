@@ -3,12 +3,12 @@ package device
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"iot/message"
 	"iot/middlerware"
 	"iot/utils"
 	"net"
-	"sync"
 )
 
 type Manager struct {
@@ -18,28 +18,19 @@ type Manager struct {
 	decoder     message.Decoder
 }
 
-var instance *Manager
-var one sync.Once
+func NewDeviceManager(logger log.Logger) *Manager {
 
-func GetInstanceManager(logger log.Logger) *Manager {
-
-	if instance == nil {
-		one.Do(func() {
-			instance = &Manager{
-				Devices:     make([]Device, 0),
-				Logger:      logger,
-				Middlewares: *middlerware.GetMiddlewareInstance(),
-				decoder: message.Decoder{
-					Logger: logger,
-				},
-			}
-		})
+	return &Manager{
+		Devices:     make([]Device, 0),
+		Logger:      logger,
+		Middlewares: *middlerware.GetMiddlewareInstance(),
+		decoder: message.Decoder{
+			Logger: logger,
+		},
 	}
-	return instance
+	  
 }
-func GetInstanceManagerWithoutLogger() *Manager {
-	return instance
-}
+
 func (c *Manager) Add(device Device) error {
 	for _, element := range c.Devices {
 		if element.ClientID == device.ClientID || element.Conn == device.Conn {
@@ -53,6 +44,14 @@ func (c *Manager) Add(device Device) error {
 func (c *Manager) GetDeviceByDeviceId(deviceId string) (Device, error) {
 	for _, element := range c.Devices {
 		if bytes.Equal(element.DeviceID, []byte(deviceId)) {
+			return element, nil
+		}
+	}
+	return Device{}, errors.New("Device not exist")
+}
+func (c *Manager) GetDeviceByConnection(_con net.Conn) (Device, error) {
+	for _, element := range c.Devices {
+		if _con == element.Conn {
 			return element, nil
 		}
 	}
@@ -116,26 +115,23 @@ func (c *Manager) Get(device Device) (Device, error) {
 //	return nil
 //}
 
-func (c *Manager) SendMessage(conn net.Conn, data *message.Message) error {
-	_, err := c.Middlewares.Output(conn, data)
+func (c *Manager) SendMessage(device Device, _message *message.Message) error {
+	fmt.Printf("_message.Type %s ,_message.Payload %s\n", _message.Type, _message.Payload)
+	_, err := c.Middlewares.Output(device.Conn, _message)
 	if err != nil {
 		return err
 	}
-	content := utils.ContentMaker(*data)
-	conn.Write([]byte(content))
+	content := utils.ContentMaker(*_message)
+	device.Conn.Write([]byte(content))
 	return nil
 }
-func (c *Manager) SendMessageWithDeviceId(deviceId string, _type, payload, date string) error {
+
+func (c *Manager) SendMessageWithDeviceId(deviceId string, _message message.Message) error {
+
 	device, err := c.GetDeviceByDeviceId(deviceId)
 	if err != nil {
 		return err
 	}
-	msg := message.Message{
-		Extentions: make([]message.Extention, 0),
-		Type:       []byte(_type),
-		Payload:    []byte(payload),
-		Date:       date,
-	}
-	c.SendMessage(device.Conn, &msg)
+	c.SendMessage(device, &_message)
 	return nil
 }

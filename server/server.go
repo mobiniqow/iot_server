@@ -18,14 +18,16 @@ type server struct {
 	middlewares   middlerware.Middlewares
 	logger        log.Logger
 	messagebroker rabbitmq.MessageBroker
+	DeviceManager *device.Manager
 }
 
-func New(port int, logger log.Logger, middlerware middlerware.Middlewares, messageBroker rabbitmq.MessageBroker) *server {
+func New(port int, logger log.Logger, middlerware middlerware.Middlewares, messageBroker rabbitmq.MessageBroker, manager *device.Manager) *server {
 	return &server{
 		Port:          port,
 		middlewares:   middlerware,
 		logger:        logger,
 		messagebroker: messageBroker,
+		DeviceManager: manager,
 	}
 }
 
@@ -49,8 +51,6 @@ func (c *server) Run() {
 	// fmt.Println("Server is listening on port 8080")
 	c.logger.Log("Server is listening on port 8080")
 
-	deviceManager := device.GetInstanceManager(c.logger)
-
 	validator := message.Validator{}
 
 	decoder := message.Decoder{Logger: c.logger}
@@ -64,10 +64,13 @@ func (c *server) Run() {
 			continue
 		}
 		newDevice := device.Device{Conn: conn, ClientID: conn.RemoteAddr().String()}
-		deviceManager.Add(newDevice)
-		handler := handler.Handler{Connection: conn, DeviceManager: deviceManager, Logger: c.logger,
+
+		c.DeviceManager.Add(newDevice)
+		handler := handler.Handler{Connection: conn, DeviceManager: c.DeviceManager, Logger: c.logger,
 			Validator: validator, Decoder: decoder, Device: newDevice, Middleware: &c.middlewares,
-			MessageBroker: rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", c.logger)}
+			//MessageBroker: rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", c.logger)
+			MessageBroker: c.messagebroker,
+		}
 		handler.Start()
 	}
 }

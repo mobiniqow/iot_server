@@ -21,10 +21,11 @@ const Name = "OB"
 const CODE = 0xFAFA
 
 type TryJob struct {
-	TryNumber int8
-	SleepTime time.Duration
-	Jobs      map[string]Job
-	Logger    log.Logger
+	TryNumber     int8
+	SleepTime     time.Duration
+	Jobs          map[string]Job
+	Logger        log.Logger
+	DeviceManager *device.Manager
 }
 
 // todo bayad ersal konam va sare har ersal ye shomare bezanam va vaghty packet ersal shode hast va dobare ersal kard
@@ -43,11 +44,15 @@ func (c *TryJob) Controller() {
 		for {
 			for k, v := range c.Jobs {
 				if v.State == SUSPENDED {
-					dm := device.GetInstanceManagerWithoutLogger()
 					job := c.Jobs[k]
 					job.MessageTryNumber = job.MessageTryNumber + 1
 					c.Jobs[k] = job
-					dm.SendMessage(v.Conn, &job.Data)
+					_device, err := c.DeviceManager.GetDeviceByConnection(v.Conn)
+					if err != nil {
+						c.Logger.Log("device not found", v.Conn.RemoteAddr().String())
+						continue
+					}
+					c.DeviceManager.SendMessage(_device, &job.Data)
 					if job.MessageTryNumber >= c.TryNumber {
 						job.State = END
 						c.Jobs[k] = job
@@ -73,7 +78,6 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 		JOB_QUEUE++
 		println(JOB_QUEUE)
 		sequenceNumber, _ := utils.IntToByteArray(JOB_QUEUE)
-		fmt.Printf("sequence number: %d\n", sequenceNumber)
 		job := Job{
 			Conn:             *con,
 			Data:             *data,
@@ -93,7 +97,6 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 }
 
 func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
-
 	if bytes.Equal(data.Type, message.JOBS) {
 		messageCode := data.Payload[:2]
 		sequenceNumber := data.Payload[2:]
@@ -105,8 +108,6 @@ func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
 			j.State = SUCCESS
 			c.Jobs[key] = j
 		}
-		//_byte, _ := hex.DecodeString(data.Payload)
-		//fmt.Printf("message.Payload %v\n", _byte)
 		// check shavad ke payam baraye in user hast ya na
 	}
 	return nil

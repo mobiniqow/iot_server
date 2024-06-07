@@ -2,16 +2,21 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/go-kit/kit/log"
 	"iot/device"
 	"iot/message"
+	"iot/message_broker/gateway"
 	"iot/message_broker/rabbitmq"
+	"iot/message_broker/strategy"
 	"iot/middlerware"
 	"iot/middlerware/try_job"
 	"iot/server"
 	"os"
 	"time"
+)
+
+const (
+	SCHEDULE = "SD"
 )
 
 func main() {
@@ -22,27 +27,28 @@ func main() {
 		logger = log.NewSyncLogger(logger)
 		logger = log.With(logger, "service", "url", "iot_server", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 	}
-
-	middlerware := middlerware.GetMiddlewareInstance()
-
-	middlerware.Add(&try_job.TryJob{
+	_middleware := middlerware.GetMiddlewareInstance()
+	deviceManager := device.Manager{Devices: make([]device.Device, 0), Logger: logger, Middlewares: *_middleware}
+	_gateway := gateway.NewGateway(logger)
+	scheduleStrategy := strategy.ScheduleStrategy{
+		StrategyCode: SCHEDULE, DeviceManager: &deviceManager}
+	_gateway.AddStrategy(&scheduleStrategy)
+	_middleware.Add(&try_job.TryJob{
 		TryNumber: 30,
 		SleepTime: 10 * time.Second,
 		Jobs:      make(map[string]try_job.Job),
 		Logger:    logger,
 	})
 
-	messagebroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger)
-	tcpServer := server.New(PORT, logger, *middlerware, messagebroker)
+	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager)
+	tcpServer := server.New(PORT, logger, *_middleware, messageBroker, &deviceManager)
 
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Print("Enter text: ")
 			data, _ := reader.ReadString('\n')
-			dm := device.GetInstanceManagerWithoutLogger()
 			decoder := message.Decoder{Logger: logger}
-			_type, payload, err := decoder.Decoder([]byte(data))
+			_type, payload, datetime, err := decoder.Decoder([]byte(data))
 			if err != nil {
 
 			}
@@ -50,8 +56,9 @@ func main() {
 				Extentions: make([]message.Extention, 0),
 				Type:       _type,
 				Payload:    payload,
+				Date:       datetime,
 			}
-			dm.SendMessage(dm.Devices[0].Conn, &message)
+			deviceManager.SendMessage(deviceManager.Devices[0], &message)
 		}
 	}()
 
