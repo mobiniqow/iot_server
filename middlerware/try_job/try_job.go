@@ -8,6 +8,7 @@ import (
 	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
+	"iot/strategy"
 	"iot/utils"
 	"net"
 	"time"
@@ -58,6 +59,7 @@ func (c *TryJob) Controller() {
 					if job.MessageTryNumber >= c.TryNumber {
 						job.State = END
 						c.Jobs[k] = job
+						delete(c.Jobs, k)
 						// inja shayad end haro pak konam
 					}
 				}
@@ -99,7 +101,7 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 }
 
 func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
-	if bytes.Equal(data.Type, message.JOBS) {
+	if bytes.Equal(data.Type, []byte(strategy.JOBS)) {
 		messageCode := data.Payload[:2]
 		sequenceNumber := data.Payload[2:]
 		c.Logger.Log("message code", messageCode, "sequence number", sequenceNumber)

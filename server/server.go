@@ -5,6 +5,7 @@ import (
 	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
+	"iot/message_broker/gateway"
 	"iot/message_broker/rabbitmq"
 	"iot/middlerware/try_job"
 	"iot/server/handler"
@@ -19,11 +20,12 @@ type server struct {
 	messageBroker rabbitmq.MessageBroker
 	DeviceManager *device.Manager
 	BroadCaster   *brodcaster.BroadCaster
+	Gateway       *gateway.Gateway
 }
 
 func New(port int, logger log.Logger,
 	messageBroker rabbitmq.MessageBroker, manager *device.Manager,
-	broadCaster *brodcaster.BroadCaster,
+	broadCaster *brodcaster.BroadCaster, gateway *gateway.Gateway,
 ) *server {
 	return &server{
 		Port:          port,
@@ -31,6 +33,7 @@ func New(port int, logger log.Logger,
 		messageBroker: messageBroker,
 		DeviceManager: manager,
 		BroadCaster:   broadCaster,
+		Gateway:       gateway,
 	}
 }
 
@@ -72,7 +75,7 @@ func (c *server) Run() {
 		handler := handler.Handler{Connection: conn, DeviceManager: c.DeviceManager, Logger: c.logger,
 			Validator: validator, Decoder: decoder, Device: newDevice, Middleware: c.BroadCaster.MiddleWares,
 			//MessageBroker: rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", c.logger)
-			MessageBroker: c.messageBroker,
+			MessageBroker: c.messageBroker, Gateway: c.Gateway,
 		}
 		handler.Start()
 	}

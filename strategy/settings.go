@@ -1,6 +1,7 @@
 package strategy
 
 import (
+	"fmt"
 	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
@@ -13,14 +14,30 @@ type SettingsStrategy struct {
 	BroadCaster   *brodcaster.BroadCaster
 }
 
-func (c *SettingsStrategy) Input(_message []byte) (message.Message, error) {
+func (c *SettingsStrategy) MessageBroker(_message []byte) (message.Message, error) {
 	result := c.Decode(_message)
 	return result, nil
 }
 
-func (c *SettingsStrategy) Output(_message message.Message, deviceId string) {
-	device, _ := c.DeviceManager.GetDeviceByDeviceId(deviceId)
-	c.BroadCaster.SendMessage(device, &_message)
+func (c *SettingsStrategy) ClientHandler(data []byte) (message.Message, error) {
+	//device, _ := c.DeviceManager.GetDeviceByDeviceId(deviceId)
+	//c.BroadCaster.SendMessage(device, &_message)
+	fmt.Printf("stirngdata %s\n", data)
+	_type := data[:2]
+	payload := make([]byte, 0)
+	datetime := make([]byte, 0)
+
+	if len(data) >= 4 {
+		payload = data[2:4]
+		datetime = data[4:]
+	}
+
+	return message.Message{
+		Payload:    payload,
+		Type:       _type,
+		Date:       datetime,
+		Extentions: make([]message.Extention, 0),
+	}, nil
 }
 
 func (c *SettingsStrategy) GetCode() string {
@@ -39,6 +56,7 @@ func (c *SettingsStrategy) Decode(data []byte) message.Message {
 	return *_message
 	// dar payload 4 caracter aval shomare relay hast va baghie barname haftegi relay
 }
+
 func (c *SettingsStrategy) GetDeviceId(data []byte) string {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)

@@ -2,11 +2,12 @@ package handler
 
 import (
 	"bytes"
-	"fmt"
 	"iot/device"
 	"iot/message"
+	"iot/message_broker/gateway"
 	"iot/message_broker/rabbitmq"
 	"iot/middlerware"
+	"iot/strategy"
 	"net"
 
 	"github.com/go-kit/kit/log"
@@ -22,6 +23,7 @@ type Handler struct {
 	Decoder       message.Decoder
 	Middleware    *middlerware.Middlewares
 	MessageBroker rabbitmq.MessageBroker
+	Gateway       *gateway.Gateway
 }
 
 func (c *Handler) CloseConnection(Connection net.Conn) {
@@ -47,37 +49,49 @@ func (c *Handler) Start() {
 				c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
 			} else {
 				body := buffer[:n]
-				_type, payload, datetime, err := c.Decoder.Decoder(body)
-				msg := message.NewMessage(_type, datetime, payload)
-				if c.Validator.Validate(body) {
-					if err != nil {
-						c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
-					} else {
-						// agar payami ke amad moshabeh id bod ono add konam be device haie mojod
-						if bytes.Equal(_type, message.GET_ID) {
-							c.Device.DeviceID = payload
-							c.DeviceManager.Update(c.Device)
-							c.Logger.Log("Received message with ID:", c.Device.DeviceID)
-						} else {
-							if c.Device.IsValid() {
-								fmt.Printf("new_device.DeviceID %s \n", string(c.Device.DeviceID))
-								c.MessageBroker.SendData(string(c.Device.DeviceID), *msg)
-								print("yes bro")
-							}
-						}
-					}
-				}
-
+				_message, err := c.Gateway.ClientHandler(body)
 				if err != nil {
 					c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
 				} else {
-					_, err := c.Middleware.Inputs(c.Connection, msg)
-					if err != nil {
-						c.Logger.Log("Get message with error: %v", err)
-						return
+					if bytes.Equal(_message.Type, []byte(strategy.GET_ID)) {
+						c.Device.DeviceID = _message.Payload
+						c.DeviceManager.Update(c.Device)
+						c.Logger.Log("Received message with ID:", c.Device.DeviceID)
+						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
+					} else {
+						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
 					}
 				}
 			}
+			//_type, payload, datetime, err := c.Decoder.Decoder(body)
+			//msg := message.NewMessage(_type, datetime, payload)
+			//if c.Validator.Validate(body) {
+			//	if err != nil {
+			//		c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
+			//	} else {
+			//		// agar payami ke amad moshabeh id bod ono add konam be device haie mojod
+			//		if bytes.Equal(_type, message.GET_ID) {
+			//			c.Device.DeviceID = payload
+			//			c.DeviceManager.Update(c.Device)
+			//			c.Logger.Log("Received message with ID:", c.Device.DeviceID)
+			//		} else {
+			//			if c.Device.IsValid() {
+			//				fmt.Printf("new_device.DeviceID %s \n", string(c.Device.DeviceID))
+			//				c.MessageBroker.SendData(string(c.Device.DeviceID), *msg)
+			//				print("yes bro")
+			//			}
+			//		}
+			//	}
+
+			//if err != nil {
+			//	c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
+			//} else {
+			//	_, err := c.Middleware.Inputs(c.Connection, msg)
+			//	if err != nil {
+			//		c.Logger.Log("Get message with error: %v", err)
+			//		return
+			//	}
+			//}
 		}
 	}()
 }

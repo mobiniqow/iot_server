@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/go-kit/kit/log"
 	"iot/message"
-	"iot/message_broker/strategy"
+	"iot/strategy"
 	"iot/utils"
 )
 
@@ -20,19 +20,26 @@ func NewGateway(logger log.Logger) *Gateway {
 	}
 }
 
-func (c *Gateway) Input(data []byte) (message.Message, error) {
+func (c *Gateway) MessageBroker(data []byte) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
 	strategyCode := c.GetStrategyCode(data)
 	println("strategyCode: ", strategyCode)
 	val, ok := c.strategy[strategyCode]
 	if ok {
-		return val.Input(data)
+		return val.MessageBroker(data)
 	}
 	return message.Message{}, errors.New("strategy not found")
 }
 
-func (c *Gateway) Output(message message.Message, deviceId string) {
-	c.logger.Log("Gateway", "Output", message.Type, "deviceId", deviceId)
+func (c *Gateway) ClientHandler(data []byte) (message.Message, error) {
+	c.logger.Log("Gateway", "Input", "deviceId")
+	strategyCode := string(data[:2])
+	println("strategyCode: ", strategyCode)
+	val, ok := c.strategy[strategyCode]
+	if ok {
+		return val.ClientHandler(data)
+	}
+	return message.Message{}, errors.New("strategy not found")
 }
 
 func (c *Gateway) AddStrategy(strategy strategy.Strategy) {

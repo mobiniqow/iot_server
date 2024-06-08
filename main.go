@@ -5,20 +5,14 @@ import (
 	"github.com/go-kit/kit/log"
 	"iot/brodcaster"
 	"iot/device"
-	"iot/message"
 	"iot/message_broker/gateway"
 	"iot/message_broker/rabbitmq"
-	"iot/message_broker/strategy"
 	"iot/middlerware"
 	"iot/middlerware/try_job"
 	"iot/server"
+	"iot/strategy"
 	"os"
 	"time"
-)
-
-const (
-	SCHEDULE = "SD"
-	SETTINGS = "CD"
 )
 
 func main() {
@@ -33,8 +27,8 @@ func main() {
 	deviceManager := device.Manager{Devices: make([]device.Device, 0), Logger: logger}
 	broadCaster := brodcaster.BroadCaster{MiddleWares: _middleware}
 	_middleware.Add(&try_job.TryJob{
-		TryNumber:     30,
-		SleepTime:     5 * time.Second,
+		TryNumber:     4,
+		SleepTime:     3 * time.Second,
 		Jobs:          make(map[string]try_job.Job),
 		Logger:        logger,
 		DeviceManager: &deviceManager,
@@ -43,30 +37,30 @@ func main() {
 
 	_gateway := gateway.NewGateway(logger)
 	scheduleStrategy := strategy.ScheduleStrategy{
-		StrategyCode: SCHEDULE, DeviceManager: &deviceManager}
+		StrategyCode: strategy.SCHEDULE, DeviceManager: &deviceManager}
+
 	settingsStrategy := strategy.SettingsStrategy{
-		StrategyCode: SETTINGS, DeviceManager: &deviceManager,
+		StrategyCode: strategy.SETTINGS, DeviceManager: &deviceManager,
 	}
+
+	getIdStrategy := strategy.GetIdStrategy{
+		StrategyCode: strategy.GET_ID, DeviceManager: &deviceManager,
+	}
+
+	_gateway.AddStrategy(&getIdStrategy)
 	_gateway.AddStrategy(&scheduleStrategy)
 	_gateway.AddStrategy(&settingsStrategy)
 
 	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager, &broadCaster)
-	tcpServer := server.New(PORT, logger, messageBroker, &deviceManager, &broadCaster)
+	tcpServer := server.New(PORT, logger, messageBroker, &deviceManager, &broadCaster, _gateway)
 
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
 			data, _ := reader.ReadString('\n')
-			decoder := message.Decoder{Logger: logger}
-			_type, payload, datetime, err := decoder.Decoder([]byte(data))
+			message, err := _gateway.ClientHandler([]byte(data))
 			if err != nil {
 
-			}
-			message := message.Message{
-				Extentions: make([]message.Extention, 0),
-				Type:       _type,
-				Payload:    payload,
-				Date:       datetime,
 			}
 			broadCaster.SendMessage(deviceManager.Devices[0], &message)
 		}
