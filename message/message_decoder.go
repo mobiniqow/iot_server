@@ -37,8 +37,7 @@ func (dec *Decoder) Decoder(data []byte) (_type Type, payload []byte, datetime [
 	if bytes.Equal(_type, JOBS) {
 		return _type, data[2:4], data[4:], nil
 	} else if bytes.Equal(_type, GET_ID) {
-		// dar halate VV mikhad device id ro befreste device id 11 raghami hastesh
-
+		// dar halate VV mikhad device id ro befreste device id 11 raghami hastes
 		return _type, data[2:13], data[13:], nil
 	} else if bytes.Equal(_type, LAST_STATE) {
 		return _type, nil, nil, nil
