@@ -33,13 +33,16 @@ func (c *Gateway) MessageBroker(data []byte) (message.Message, error) {
 
 func (c *Gateway) ClientHandler(data []byte) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
-	strategyCode := string(data[:2])
-	println("strategyCode: ", strategyCode)
-	val, ok := c.strategy[strategyCode]
-	if ok {
-		return val.ClientHandler(data)
+	if len(data) > 2 {
+		strategyCode := string(data[:2])
+		println("strategyCode: ", strategyCode)
+		val, ok := c.strategy[strategyCode]
+		if ok {
+			return val.ClientHandler(data)
+		}
+		return message.Message{}, errors.New("strategy not found")
 	}
-	return message.Message{}, errors.New("strategy not found")
+	return message.Message{}, errors.New("data a bit is wrong")
 }
 
 func (c *Gateway) AddStrategy(strategy strategy.Strategy) {

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"iot/brodcaster"
 	"iot/device"
 	"iot/message"
@@ -42,7 +41,7 @@ func (c *server) Run() {
 		middleware.Controller()
 	}
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", c.Port))
+	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		c.logger.Log("Error", err)
 		return
@@ -55,7 +54,7 @@ func (c *server) Run() {
 	defer listener.Close()
 	defer c.logger.Log("server shutdown")
 	// fmt.Println("Server is listening on port 8080")
-	c.logger.Log("Server is listening on port 8080")
+	c.logger.Log("Server is listening on port ", c.Port)
 
 	validator := message.Validator{}
 

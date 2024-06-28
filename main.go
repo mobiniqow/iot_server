@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"github.com/go-kit/kit/log"
 	"iot/brodcaster"
 	"iot/device"
@@ -16,7 +15,7 @@ import (
 )
 
 func main() {
-	PORT := 8080
+	PORT := 9090
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
@@ -54,17 +53,17 @@ func main() {
 	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager, &broadCaster)
 	tcpServer := server.New(PORT, logger, messageBroker, &deviceManager, &broadCaster, _gateway)
 
-	go func() {
-		for {
-			reader := bufio.NewReader(os.Stdin)
-			data, _ := reader.ReadString('\n')
-			message, err := _gateway.ClientHandler([]byte(data))
-			if err != nil {
-
-			}
-			broadCaster.SendMessage(deviceManager.Devices[0], &message)
-		}
-	}()
+	//go func() {
+	//	for {
+	//		reader := bufio.NewReader(os.Stdin)
+	//		data, _ := reader.ReadString('\n')
+	//		message, err := _gateway.ClientHandler([]byte(data))
+	//		if err != nil {
+	//
+	//		}
+	//		broadCaster.SendMessage(deviceManager.Devices[0], &message)
+	//	}
+	//}()
 
 	tcpServer.Run()
 }

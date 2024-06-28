@@ -30,7 +30,7 @@ func (c *Handler) CloseConnection(Connection net.Conn) {
 	err := Connection.Close()
 	if err != nil {
 		c.Logger.Log("Connection closed with error: %v", err)
-		panic(err)
+		print(err)
 	} else {
 		c.Logger.Log("Connection closed")
 	}
@@ -47,6 +47,7 @@ func (c *Handler) Start() {
 			n, err := c.Connection.Read(buffer)
 			if err != nil {
 				c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
+				return
 			} else {
 				body := buffer[:n]
 				_message, err := c.Gateway.ClientHandler(body)

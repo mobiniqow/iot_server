@@ -30,7 +30,7 @@ func StringToMap(data string) map[string]interface{} {
 	sec := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(_data), &sec); err != nil {
 		fmt.Printf("error %v \n", err)
-		panic(err)
+		return make(map[string]interface{})
 	}
 	return sec
 }

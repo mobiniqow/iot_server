@@ -53,7 +53,7 @@ func (c *Producer) SendMessage(deviceID string, message message.Message) error {
 	fmt.Printf("messageJson  %s", messageJson)
 	b, err := json.Marshal(messageJson)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	err = publisher.Publish(
 		// inja status ro bapayload ezafekarda var dar ebtedash device id ro dadam => devoceId:type+payload
@@ -64,6 +64,7 @@ func (c *Producer) SendMessage(deviceID string, message message.Message) error {
 	)
 	if err != nil {
 		c.Logger.Log(err)
+		return err
 	}
 	return nil
 

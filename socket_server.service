@@ -1,13 +1,12 @@
 [Unit]
-Description=gunicorn daemon
+Description=socket server for iot
 After=network.target
 
 
 [Service]
 User=ubuntu
 Group=www-data
-WorkingDirectory=/home/ubuntu/rabiie
-ExecStart=/home/ubuntu/rabiie/venv/bin/python3 /home/ubuntu/rabiie/main.py
+ExecStart=/home/ubuntu/rabbie/socket/main
 
 [Install]
 WantedBy=multi-user.target
