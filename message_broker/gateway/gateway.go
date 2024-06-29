@@ -33,7 +33,7 @@ func (c *Gateway) MessageBroker(data []byte) (message.Message, error) {
 
 func (c *Gateway) ClientHandler(data []byte) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
-	if len(data) > 2 {
+	if len(data) >= 2 {
 		strategyCode := string(data[:2])
 		println("strategyCode: ", strategyCode)
 		val, ok := c.strategy[strategyCode]
@@ -49,6 +49,7 @@ func (c *Gateway) AddStrategy(strategy strategy.Strategy) {
 	c.logger.Log("Gateway", "AddStrategy", "strategy", strategy)
 	c.strategy[strategy.GetCode()] = strategy
 }
+
 func (c *Gateway) GetStrategyCode(data []byte) string {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)

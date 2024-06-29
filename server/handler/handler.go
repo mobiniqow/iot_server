@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"fmt"
 	"iot/device"
 	"iot/message"
 	"iot/message_broker/gateway"
@@ -9,6 +10,7 @@ import (
 	"iot/middlerware"
 	"iot/strategy"
 	"net"
+	"time"
 
 	"github.com/go-kit/kit/log"
 )
@@ -40,8 +42,18 @@ func (c *Handler) CloseConnection(Connection net.Conn) {
 func (c *Handler) Start() {
 	go func() {
 		defer c.CloseConnection(c.Connection)
-		// buffer for reading data from socket
+		go func() {
+			// 3 time request to get id
+			sendMessage := []byte("VV\r\n")
+			time.Sleep(1 * time.Second)
+			c.Device.Conn.Write(sendMessage)
+			time.Sleep(1 * time.Second)
+			c.Device.Conn.Write(sendMessage)
+			time.Sleep(1 * time.Second)
+			c.Device.Conn.Write(sendMessage)
 
+		}()
+		// buffer for reading data from socket
 		for {
 			buffer := make([]byte, 1024)
 			n, err := c.Connection.Read(buffer)
@@ -60,6 +72,7 @@ func (c *Handler) Start() {
 						c.Logger.Log("Received message with ID:", c.Device.DeviceID)
 						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
 					} else {
+						fmt.Printf("\n messageinputelse %x %s \n", _message.Payload, _message.Payload)
 						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
 					}
 				}

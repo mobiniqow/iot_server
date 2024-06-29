@@ -46,9 +46,14 @@ func main() {
 		StrategyCode: strategy.GET_ID, DeviceManager: &deviceManager,
 	}
 
+	serverTime := strategy.GetServerTimeStrategy{
+		StrategyCode: strategy.SERVER_TIME, DeviceManager: &deviceManager,
+	}
+
 	_gateway.AddStrategy(&getIdStrategy)
 	_gateway.AddStrategy(&scheduleStrategy)
 	_gateway.AddStrategy(&settingsStrategy)
+	_gateway.AddStrategy(&serverTime)
 
 	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager, &broadCaster)
 	tcpServer := server.New(PORT, logger, messageBroker, &deviceManager, &broadCaster, _gateway)

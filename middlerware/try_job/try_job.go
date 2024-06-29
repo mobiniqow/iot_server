@@ -101,6 +101,7 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 }
 
 func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
+
 	if bytes.Equal(data.Type, []byte(strategy.JOBS)) {
 		messageCode := data.Payload[:2]
 		sequenceNumber := data.Payload[2:]
