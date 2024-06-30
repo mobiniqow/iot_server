@@ -24,11 +24,13 @@ func (c *SettingsStrategy) ClientHandler(data []byte) (message.Message, error) {
 	//c.BroadCaster.SendMessage(device, &_message)
 	fmt.Printf("stirngdata %s\n", data)
 	_type := data[:2]
-	payload := make([]byte, 0)
+	var payload []byte
 	datetime := make([]byte, 0)
 
 	if len(data) >= 4 {
-		payload = data[2:7]
+		d := fmt.Sprintf("%x", data[2:7])
+		fmt.Printf("asdsda %s\n", d)
+		payload = []byte(d)
 		datetime = data[7:]
 	}
 
