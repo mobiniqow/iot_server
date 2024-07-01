@@ -7,6 +7,8 @@ After=network.target
 User=ubuntu
 Group=www-data
 ExecStart=/home/ubuntu/rabbie/socket/main
+Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target

@@ -66,7 +66,7 @@ func (c *ScheduleStrategy) Decode(data []byte) message.Message {
 	_type := []byte(dataMap["type"].(string))
 	datetime := []byte(dataMap["datetime"].(string))
 	payload := dataMap["payload"].(string)
-	byteOfPayload, _ := utils.HexToByte(payload)
+	byteOfPayload := []byte(payload)
 	_message := message.NewMessage(_type, datetime, byteOfPayload)
 	return *_message
 	// dar payload 4 caracter aval shomare relay hast va baghie barname haftegi relay
