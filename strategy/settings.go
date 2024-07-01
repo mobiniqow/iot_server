@@ -22,16 +22,16 @@ func (c *SettingsStrategy) MessageBroker(_message []byte) (message.Message, erro
 func (c *SettingsStrategy) ClientHandler(data []byte) (message.Message, error) {
 	//device, _ := c.DeviceManager.GetDeviceByDeviceId(deviceId)
 	//c.BroadCaster.SendMessage(device, &_message)
-	fmt.Printf("stirngdata %s\n", data)
+	fmt.Printf("stirngdata %s\n", data[:2])
 	_type := data[:2]
 	var payload []byte
 	datetime := make([]byte, 0)
 
 	if len(data) >= 4 {
-		d := fmt.Sprintf("%x", data[2:7])
+		d := fmt.Sprintf("%s", data[2:12])
 		fmt.Printf("asdsda %s\n", d)
 		payload = []byte(d)
-		datetime = data[7:]
+		datetime = data[12:]
 	}
 
 	return message.Message{

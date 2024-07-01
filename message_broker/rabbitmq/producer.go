@@ -6,7 +6,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/wagslane/go-rabbitmq"
 	"iot/message"
-	"iot/utils"
 )
 
 type Producer struct {
@@ -39,7 +38,7 @@ func (c *Producer) SendMessage(deviceID string, message message.Message) error {
 	messageJson := make(map[string]string)
 	messageJson["device_id"] = deviceID
 	if len(string(message.Payload)) > 0 {
-		messageJson["payload"] = utils.HexToBinary(fmt.Sprintf("%X", string(message.Payload)))
+		messageJson["payload"] = string(message.Payload)
 	} else {
 		messageJson["payload"] = ""
 	}
