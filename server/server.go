@@ -83,3 +83,4 @@ func (c *server) Run() {
 func (c *server) Use(middleware try_job.TryJob) {
 	c.BroadCaster.MiddleWares.Add(&middleware)
 }
+

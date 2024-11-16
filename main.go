@@ -7,11 +7,11 @@ import (
 	"iot/message_broker/gateway"
 	"iot/message_broker/rabbitmq"
 	"iot/middlerware"
-	"iot/middlerware/try_job"
+//	"iot/middlerware/try_job"
 	"iot/server"
 	"iot/strategy"
 	"os"
-	"time"
+//	"time"
 )
 
 func main() {
@@ -25,14 +25,14 @@ func main() {
 	_middleware := middlerware.GetMiddlewareInstance()
 	deviceManager := device.Manager{Devices: make([]device.Device, 0), Logger: logger}
 	broadCaster := brodcaster.BroadCaster{MiddleWares: _middleware}
-	_middleware.Add(&try_job.TryJob{
-		TryNumber:     4,
-		SleepTime:     3 * time.Second,
-		Jobs:          make(map[string]try_job.Job),
-		Logger:        logger,
-		DeviceManager: &deviceManager,
-		BroadCaster:   &broadCaster,
-	})
+//	_middleware.Add(&try_job.TryJob{
+//		TryNumber:     4,
+//		SleepTime:     3 * time.Second,
+//		Jobs:          make(map[string]try_job.Job),
+//		Logger:        logger,
+//		DeviceManager: &deviceManager,
+//		BroadCaster:   &broadCaster,
+//	})
 
 	_gateway := gateway.NewGateway(logger)
 	scheduleStrategy := strategy.ScheduleStrategy{

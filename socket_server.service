@@ -6,7 +6,7 @@ After=network.target
 [Service]
 User=ubuntu
 Group=www-data
-ExecStart=/home/ubuntu/rabbie/socket/main
+ExecStart=/home/ubuntu/iot/socket/main
 Restart=always
 RestartSec=3
 

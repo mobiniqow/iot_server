@@ -23,13 +23,13 @@ func (c *ConsumerHandler) Handler(d rabbitmq.Delivery) rabbitmq.Action {
 	deviceId := sec["device_id"].(string)
 	_message, _ := c.Gateway.MessageBroker(d.Body)
 	//fmt.Printf("date %s \n", date)'
-	fmt.Printf("_message %s\n", _message)
+	fmt.Printf("_message %s\n", sec)
 	device, err := c.DeviceManager.GetDeviceByDeviceId(deviceId)
 	if err != nil {
 		println(err.Error())
 	} else {
 		c.BroadCaster.SendMessage(device, &_message)
 	}
-
+fmt.Print(sec)
 	return rabbitmq.Ack
 }
