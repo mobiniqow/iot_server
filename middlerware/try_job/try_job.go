@@ -1,7 +1,6 @@
 package try_job
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"github.com/go-kit/kit/log"
@@ -34,9 +33,9 @@ type TryJob struct {
 // todo bayad ersal konam va sare har ersal ye shomare bezanam va vaghty packet ersal shode hast va dobare ersal kard
 // todo betone packet ro dobare ersal kona az counter 0 beshe
 // todo check konam agevice to device manager nist job ro pak konam
-func (c *TryJob) findJobWithSequence(code []byte) *Job {
+func (c *TryJob) findJobWithSequence(code string) *Job {
 	for _, job := range c.Jobs {
-		if bytes.Equal(code, job.Code) {
+		if code == string(job.Code) {
 			return &job
 		}
 	}
@@ -102,7 +101,7 @@ func (c *TryJob) Output(con *net.Conn, data *message.Message) error {
 
 func (c *TryJob) Input(con *net.Conn, data *message.Message) error {
 
-	if bytes.Equal(data.Type, []byte(strategy.JOBS)) {
+	if data.Type == strategy.JOBS {
 		messageCode := data.Payload[:2]
 		sequenceNumber := data.Payload[2:]
 		c.Logger.Log("message code", messageCode, "sequence number", sequenceNumber)

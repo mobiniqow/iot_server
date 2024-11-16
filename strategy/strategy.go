@@ -11,9 +11,9 @@ const (
 )
 
 type Strategy interface {
-	MessageBroker([]byte) (message.Message, error)
-	ClientHandler([]byte) (message.Message, error)
-	Decode([]byte) message.Message
+	MessageBroker(string) (message.Message, error)
+	ClientHandler(string) (message.Message, error)
+	Decode(string) message.Message
 	GetCode() string
-	GetDeviceId(data []byte) string
+	GetDeviceId(string) string
 }

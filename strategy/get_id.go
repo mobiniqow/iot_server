@@ -18,20 +18,21 @@ type GetIdStrategy struct {
 	BroadCaster   *brodcaster.BroadCaster
 }
 
-func (c *GetIdStrategy) MessageBroker(_message []byte) (message.Message, error) {
+func (c *GetIdStrategy) MessageBroker(_message string) (message.Message, error) {
 	result := c.Decode(_message)
 	return result, nil
 }
 
-func (c *GetIdStrategy) ClientHandler(data []byte) (message.Message, error) {
+func (c *GetIdStrategy) ClientHandler(data string) (message.Message, error) {
 	//device, _ := c.DeviceManager.GetDeviceByDeviceId(deviceId)
 	//c.BroadCaster.SendMessage(device, &_message)
+
 	_type := data[:2]
 	payload := data[2:]
 	return message.Message{
 		Type:       _type,
 		Payload:    payload,
-		Date:       nil,
+		Date:       "",
 		Extentions: make([]message.Extention, 0),
 	}, nil
 }
@@ -41,18 +42,18 @@ func (c *GetIdStrategy) GetCode() string {
 }
 
 // device id ro hamrah ba message bar migardone
-func (c *GetIdStrategy) Decode(data []byte) message.Message {
+func (c *GetIdStrategy) Decode(data string) message.Message {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)
-	_type := []byte(dataMap["type"].(string))
+	_type := (dataMap["type"].(string))
 	payload := dataMap["payload"].(string)
-	byteOfPayload, _ := utils.HexToByte(payload)
-	_message := message.NewMessage(_type, nil, byteOfPayload)
+	//byteOfPayload, _ := utils.HexToByte(payload)
+	_message := message.NewMessage(_type, "", payload)
 	return *_message
 	// dar payload 4 caracter aval shomare relay hast va baghie barname haftegi relay
 }
 
-func (c *GetIdStrategy) GetDeviceId(data []byte) string {
+func (c *GetIdStrategy) GetDeviceId(data string) string {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)
 	deviceId := dataMap["device_id"].(string)

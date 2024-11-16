@@ -21,7 +21,7 @@ type ScheduleStrategy struct {
 	BroadCaster   *brodcaster.BroadCaster
 }
 
-func (c *ScheduleStrategy) MessageBroker(_message []byte) (message.Message, error) {
+func (c *ScheduleStrategy) MessageBroker(_message string) (message.Message, error) {
 	result := c.Decode(_message)
 	return result, nil
 }
@@ -31,12 +31,12 @@ func md(str string) string {
 	io.WriteString(h, str)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
-func (c *ScheduleStrategy) ClientHandler(data []byte) (message.Message, error) {
+func (c *ScheduleStrategy) ClientHandler(data string) (message.Message, error) {
 	//device, _ := c.DeviceManager.GetDeviceByDeviceId(deviceId)
 	//c.BroadCaster.SendMessage(device, &_message)
 	_type := data[:2]
-	payload := make([]byte, 0)
-	datetime := make([]byte, 0)
+	payload := ""
+	datetime := ""
 	payload = data[2:]
 
 	if len(data) >= DATE_TIME_LENGTH+PAYLOAD_WITH_DATE_TIME_LENGTH+len(_type) {
@@ -60,18 +60,18 @@ func (c *ScheduleStrategy) GetCode() string {
 }
 
 // device id ro hamrah ba message bar migardone
-func (c *ScheduleStrategy) Decode(data []byte) message.Message {
+func (c *ScheduleStrategy) Decode(data string) message.Message {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)
-	_type := []byte(dataMap["type"].(string))
-	datetime := []byte(dataMap["datetime"].(string))
+	_type := (dataMap["type"].(string))
+	datetime := (dataMap["datetime"].(string))
 	payload := dataMap["payload"].(string)
-	byteOfPayload := []byte(payload)
+	byteOfPayload := (payload)
 	_message := message.NewMessage(_type, datetime, byteOfPayload)
 	return *_message
 	// dar payload 4 caracter aval shomare relay hast va baghie barname haftegi relay
 }
-func (c *ScheduleStrategy) GetDeviceId(data []byte) string {
+func (c *ScheduleStrategy) GetDeviceId(data string) string {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)
 	deviceId := dataMap["device_id"].(string)

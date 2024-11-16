@@ -14,23 +14,23 @@ type SettingsStrategy struct {
 	BroadCaster   *brodcaster.BroadCaster
 }
 
-func (c *SettingsStrategy) MessageBroker(_message []byte) (message.Message, error) {
+func (c *SettingsStrategy) MessageBroker(_message string) (message.Message, error) {
 	result := c.Decode(_message)
 	return result, nil
 }
 
-func (c *SettingsStrategy) ClientHandler(data []byte) (message.Message, error) {
+func (c *SettingsStrategy) ClientHandler(data string) (message.Message, error) {
 	//device, _ := c.DeviceManager.GetDeviceByDeviceId(deviceId)
 	//c.BroadCaster.SendMessage(device, &_message)
 	fmt.Printf("stirngdata %s\n", data[:2])
 	_type := data[:2]
-	var payload []byte
-	datetime := make([]byte, 0)
+	var payload string
+	datetime := ""
 
 	if len(data) >= 4 {
 		d := fmt.Sprintf("%s", data[2:12])
 		fmt.Printf("asdsda %s\n", d)
-		payload = []byte(d)
+		payload = (d)
 		datetime = data[12:]
 	}
 
@@ -47,20 +47,20 @@ func (c *SettingsStrategy) GetCode() string {
 }
 
 // device id ro hamrah ba message bar migardone
-func (c *SettingsStrategy) Decode(data []byte) message.Message {
+func (c *SettingsStrategy) Decode(data string) message.Message {
 	dataString := string(data)
 	dataMap := utils.StringToMap(dataString)
-	_type := []byte(dataMap["type"].(string))
-	datetime := []byte(dataMap["datetime"].(string))
+	_type := (dataMap["type"].(string))
+	datetime := (dataMap["datetime"].(string))
 	payload := dataMap["payload"].(string)
-	byteOfPayload, _ := utils.HexToByte(payload)
-	_message := message.NewMessage(_type, datetime, byteOfPayload)
+	//byteOfPayload, _ := utils.HexToByte(payload)
+	_message := message.NewMessage(_type, datetime, payload)
 	return *_message
 	// dar payload 4 caracter aval shomare relay hast va baghie barname haftegi relay
 }
 
-func (c *SettingsStrategy) GetDeviceId(data []byte) string {
-	dataString := string(data)
+func (c *SettingsStrategy) GetDeviceId(data string) string {
+	dataString := data
 	dataMap := utils.StringToMap(dataString)
 	deviceId := dataMap["device_id"].(string)
 	return deviceId

@@ -14,11 +14,12 @@ func JobKeyGenerator(conn net.Conn, message message.Message) string {
 }
 
 func ContentMaker(message message.Message) string {
-	extentions := make([]byte, 0)
-	for _, extention := range message.Extentions {
-		extentions = append(extentions, extention.Code[:]...)
-	}
-	return fmt.Sprintf("%X%X%X%04X\r\n", message.Type, message.Payload, message.Date, extentions)
+	//extentions := make([]byte, 0)
+	//for _, extention := range message.Extentions {
+	//	extentions = append(extentions, extention.Code[:]...)
+	//}
+	fmt.Printf("payload %v pay \n", message.Payload)
+	return fmt.Sprintf("%s%s%s\r\n", message.Type, message.Payload, message.Date)
 }
 
 func ByteArrayToInt(byteSlice []byte) (int, error) {
@@ -26,6 +27,7 @@ func ByteArrayToInt(byteSlice []byte) (int, error) {
 }
 
 func StringToMap(data string) map[string]interface{} {
+	fmt.Printf("\n string %v\n", data)
 	_data := strings.Replace(data, "'", "\"", -1)
 	sec := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(_data), &sec); err != nil {

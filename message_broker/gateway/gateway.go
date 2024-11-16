@@ -20,7 +20,7 @@ func NewGateway(logger log.Logger) *Gateway {
 	}
 }
 
-func (c *Gateway) MessageBroker(data []byte) (message.Message, error) {
+func (c *Gateway) MessageBroker(data string) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
 	strategyCode := c.GetStrategyCode(data)
 	println("strategyCode: ", strategyCode)
@@ -31,7 +31,7 @@ func (c *Gateway) MessageBroker(data []byte) (message.Message, error) {
 	return message.Message{}, errors.New("strategy not found")
 }
 
-func (c *Gateway) ClientHandler(data []byte) (message.Message, error) {
+func (c *Gateway) ClientHandler(data string) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
 	if len(data) >= 2 {
 		strategyCode := string(data[:2])
@@ -50,8 +50,8 @@ func (c *Gateway) AddStrategy(strategy strategy.Strategy) {
 	c.strategy[strategy.GetCode()] = strategy
 }
 
-func (c *Gateway) GetStrategyCode(data []byte) string {
-	dataString := string(data)
+func (c *Gateway) GetStrategyCode(data string) string {
+	dataString := (data)
 	dataMap := utils.StringToMap(dataString)
 	_type := dataMap["type"].(string)
 	return _type

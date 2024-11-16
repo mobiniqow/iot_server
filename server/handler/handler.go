@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"fmt"
 	"iot/device"
 	"iot/message"
@@ -62,12 +61,12 @@ func (c *Handler) Start() {
 				return
 			} else {
 				body := buffer[:n]
-				_message, err := c.Gateway.ClientHandler(body)
+				_message, err := c.Gateway.ClientHandler(string(body))
 				if err != nil {
 					c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
 				} else {
-					if bytes.Equal(_message.Type, []byte(strategy.GET_ID)) {
-						c.Device.DeviceID = _message.Payload
+					if _message.Type == strategy.GET_ID {
+						c.Device.DeviceID = []byte(_message.Payload)
 						c.DeviceManager.Update(c.Device)
 						c.Logger.Log("Received message with ID:", c.Device.DeviceID)
 						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
