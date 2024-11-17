@@ -47,13 +47,13 @@ func (c *Handler) Start() {
 			c.Device.Conn.Write(sendMessage)
 			time.Sleep(3 * time.Second)
 			device, _ := c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if device.IsValid() {
+			if !device.IsValid() {
 				fmt.Print("raft to va valid bood")
 				c.Device.Conn.Write(sendMessage)
 			}
 			time.Sleep(3 * time.Second)
 			device, _ = c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if device.IsValid() {
+			if !device.IsValid() {
 				c.Device.Conn.Write(sendMessage)
 			}
 
