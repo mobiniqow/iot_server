@@ -43,21 +43,20 @@ func (c *Handler) Start() {
 		defer c.CloseConnection(c.Connection)
 		go func() {
 			// 3 time request to get id
-
 			sendMessage := []byte("VV\r\n")
 			c.Device.Conn.Write(sendMessage)
 			time.Sleep(10 * time.Second)
 			_, err := c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if err != nil {
+			if err == nil {
 			}
 			time.Sleep(10 * time.Second)
 			_, err = c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if err != nil {
+			if err == nil {
 				c.Device.Conn.Write(sendMessage)
 			}
 			time.Sleep(10 * time.Second)
 			_, err = c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if err != nil {
+			if err == nil {
 				c.Device.Conn.Write(sendMessage)
 			}
 
