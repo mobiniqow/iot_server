@@ -46,9 +46,9 @@ func (c *Handler) Start() {
 
 			sendMessage := []byte("VV\r\n")
 			time.Sleep(10 * time.Second)
+			c.Device.Conn.Write(sendMessage)
 			_, err := c.DeviceManager.GetDeviceByConnection(c.Connection)
 			if err != nil {
-				c.Device.Conn.Write(sendMessage)
 			}
 			time.Sleep(10 * time.Second)
 			_, err = c.DeviceManager.GetDeviceByConnection(c.Connection)
