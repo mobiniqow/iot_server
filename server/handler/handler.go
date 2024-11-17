@@ -46,13 +46,13 @@ func (c *Handler) Start() {
 			sendMessage := []byte("VV\r\n")
 			c.Device.Conn.Write(sendMessage)
 			time.Sleep(10 * time.Second)
-			_, err := c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if err == nil {
+			device, _ := c.DeviceManager.GetDeviceByConnection(c.Connection)
+			if device.IsValid() {
 				c.Device.Conn.Write(sendMessage)
 			}
 			time.Sleep(10 * time.Second)
-			_, err = c.DeviceManager.GetDeviceByConnection(c.Connection)
-			if err == nil {
+			device, _ = c.DeviceManager.GetDeviceByConnection(c.Connection)
+			if device.IsValid() {
 				c.Device.Conn.Write(sendMessage)
 			}
 
