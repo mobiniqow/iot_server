@@ -45,12 +45,13 @@ func (c *Handler) Start() {
 			// 3 time request to get id
 			sendMessage := []byte("VV\r\n")
 			c.Device.Conn.Write(sendMessage)
-			time.Sleep(10 * time.Second)
+			time.Sleep(3 * time.Second)
 			device, _ := c.DeviceManager.GetDeviceByConnection(c.Connection)
 			if device.IsValid() {
+				fmt.Print("raft to va valid bood")
 				c.Device.Conn.Write(sendMessage)
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(3 * time.Second)
 			device, _ = c.DeviceManager.GetDeviceByConnection(c.Connection)
 			if device.IsValid() {
 				c.Device.Conn.Write(sendMessage)

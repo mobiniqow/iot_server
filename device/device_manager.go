@@ -3,9 +3,10 @@ package device
 import (
 	"bytes"
 	"errors"
-	"github.com/go-kit/kit/log"
 	"iot/message"
 	"net"
+
+	"github.com/go-kit/kit/log"
 )
 
 type Manager struct {
@@ -46,6 +47,7 @@ func (c *Manager) GetDeviceByDeviceId(deviceId string) (Device, error) {
 	}
 	return Device{}, errors.New("Device not exist")
 }
+
 func (c *Manager) GetDeviceByConnection(_con net.Conn) (Device, error) {
 	for _, element := range c.Devices {
 		if _con == element.Conn {
@@ -54,6 +56,7 @@ func (c *Manager) GetDeviceByConnection(_con net.Conn) (Device, error) {
 	}
 	return Device{}, errors.New("Device not exist")
 }
+
 func (c *Manager) Delete(device Device) error {
 	var selectedDevice int = -1
 	for index, element := range c.Devices {
