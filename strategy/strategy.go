@@ -3,11 +3,12 @@ package strategy
 import "iot/message"
 
 const (
-	SCHEDULE    = "SD" // 5344
-	SETTINGS    = "CD" // 4344
-	GET_ID      = "VV" // 5656
-	JOBS        = "JS" // 4a53
-	SERVER_TIME = "ST" // 4a53
+	SCHEDULE    = "RS"
+	SETTINGS    = "RR"
+	GET_ID      = "RG"
+	JOBS        = "JS"
+	SERVER_TIME = "RT"
+	LAST_STATE  = "RR"
 )
 
 type Strategy interface {

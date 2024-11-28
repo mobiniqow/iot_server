@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"errors"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"iot/message"
 	"iot/strategy"
@@ -22,7 +23,11 @@ func NewGateway(logger log.Logger) *Gateway {
 
 func (c *Gateway) MessageBroker(data string) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
+
 	strategyCode := c.GetStrategyCode(data)
+	if strategyCode[0] == 'W' {
+		strategyCode = fmt.Sprintf("R%c", strategyCode[1])
+	}
 	println("strategyCode: ", strategyCode)
 	val, ok := c.strategy[strategyCode]
 	if ok {
@@ -34,7 +39,11 @@ func (c *Gateway) MessageBroker(data string) (message.Message, error) {
 func (c *Gateway) ClientHandler(data string) (message.Message, error) {
 	c.logger.Log("Gateway", "Input", "deviceId")
 	if len(data) >= 2 {
-		strategyCode := string(data[:2])
+		strategyCode := data[:2]
+		if strategyCode[0] == 'W' {
+			strategyCode = fmt.Sprintf("R%c", strategyCode[1])
+			println("strategyCode2: ", fmt.Sprintf("R%c", strategyCode[1]))
+		}
 		println("strategyCode: ", strategyCode)
 		val, ok := c.strategy[strategyCode]
 		if ok {
@@ -51,7 +60,10 @@ func (c *Gateway) AddStrategy(strategy strategy.Strategy) {
 }
 
 func (c *Gateway) GetStrategyCode(data string) string {
-	dataString := (data)
+	if data[0] == 'W' {
+		data = fmt.Sprintf("R%S", data[1])
+	}
+	dataString := data
 	dataMap := utils.StringToMap(dataString)
 	_type := dataMap["type"].(string)
 	return _type

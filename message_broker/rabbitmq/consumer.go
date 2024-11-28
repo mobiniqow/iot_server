@@ -26,9 +26,7 @@ func (c *Consumer) Run(mq *rabbitmq.Conn) {
 		c.Logger.Log(err)
 	}
 	defer consumer.Close()
-
 	err = consumer.Run(c.Handler.Handler)
-
 	if err != nil {
 		c.Logger.Log(err)
 	}

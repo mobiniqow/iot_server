@@ -41,8 +41,8 @@ func (c *ScheduleStrategy) ClientHandler(data string) (message.Message, error) {
 
 	if len(data) >= DATE_TIME_LENGTH+PAYLOAD_WITH_DATE_TIME_LENGTH+len(_type) {
 		//payload = data[2 : len(data)-DATE_TIME_LENGTH]
-		datetime = data[len(data)-DATE_TIME_LENGTH:]
-		payload = data[2 : len(data)-DATE_TIME_LENGTH]
+
+		payload = data[2:]
 	}
 
 	//md(string(payload))

@@ -18,7 +18,7 @@ type ConsumerHandler struct {
 }
 
 func (c *ConsumerHandler) Handler(d rabbitmq.Delivery) rabbitmq.Action {
-	c.Logger.Log("consumed: %v", string(d.Body))
+	c.Logger.Log("consumed:", string(d.Body))
 	sec := utils.StringToMap(string(d.Body))
 	deviceId := sec["device_id"].(string)
 	_message, _ := c.Gateway.MessageBroker(string(d.Body))
