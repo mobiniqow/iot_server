@@ -53,11 +53,19 @@ func main() {
 	lastState := strategy.GetDeviceLastState{
 		StrategyCode: strategy.LAST_STATE, DeviceManager: &deviceManager,
 	}
+	writeTemperature := strategy.TemperatureStrategy{
+		StrategyCode: strategy.WRITE_TEMPERATURE, DeviceManager: &deviceManager,
+	}
+	readTemperature := strategy.TemperatureStrategy{
+		StrategyCode: strategy.READ_TEMPERATURE, DeviceManager: &deviceManager,
+	}
 
 	_gateway.AddStrategy(&getIdStrategy)
 	_gateway.AddStrategy(&scheduleStrategy)
 	_gateway.AddStrategy(&settingsStrategy)
 	_gateway.AddStrategy(&serverTime)
+	_gateway.AddStrategy(&writeTemperature)
+	_gateway.AddStrategy(&readTemperature)
 	_gateway.AddStrategy(&lastState)
 
 	messageBroker := rabbitmq.NewMessageBroker("amqp://guest:guest@localhost", logger, _gateway, &deviceManager, &broadCaster)
