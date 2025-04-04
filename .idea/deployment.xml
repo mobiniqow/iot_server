@@ -5,7 +5,7 @@
       <paths name="rabiie">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/ubuntu/rabbie/socket" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/ubuntu/iot/socket" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

@@ -3,6 +3,7 @@ package device
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"iot/message"
 	"net"
 
@@ -59,6 +60,8 @@ func (c *Manager) GetDeviceByConnection(_con net.Conn) (Device, error) {
 
 func (c *Manager) Delete(device Device) error {
 	var selectedDevice int = -1
+	fmt.Printf("Deleting device with clientID: %s\n", device.ClientID)
+	device.Conn.Close()
 	for index, element := range c.Devices {
 		if element.ClientID == device.ClientID || element.Conn == device.Conn || bytes.Equal(element.DeviceID, device.DeviceID) {
 			selectedDevice = index
@@ -76,12 +79,21 @@ func (c *Manager) Delete(device Device) error {
 
 func (c *Manager) Update(device Device) error {
 	var isExist = false
+	//ddevice, err := c.GetDeviceByDeviceIdByByte(device.DeviceID)
+	//if err == nil {
+	//	c.Delete(ddevice)
+	//	//element.Conn.Close()
+	//	c.Add(device)
+	//}
 	for key, element := range c.Devices {
-		if element.ClientID == device.ClientID {
+		fmt.Printf("element.ClientID is %s \r\n",element.ClientID)
+		fmt.Print(element.ClientID)
+		if element.ClientID == device.ClientID && element.ClientID != "" {
 			updatedDevice := c.Devices[key]
 			updatedDevice = device
 			c.Devices[key] = updatedDevice
 			isExist = true
+			//element.Conn.Close()
 			break
 		}
 	}
