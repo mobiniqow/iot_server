@@ -79,24 +79,29 @@ func (c *Manager) Delete(device Device) error {
 
 func (c *Manager) Update(device Device) error {
 	var isExist = false
-	//ddevice, err := c.GetDeviceByDeviceIdByByte(device.DeviceID)
-	//if err == nil {
-	//	c.Delete(ddevice)
-	//	//element.Conn.Close()
-	//	c.Add(device)
-	//}
 	for key, element := range c.Devices {
-		fmt.Printf("element.ClientID is %s \r\n",element.ClientID)
+		fmt.Printf("element.ClientID is %s \r\n", element.ClientID)
+		fmt.Printf("element.key is %v  \r\n", key)
 		fmt.Print(element.ClientID)
 		if element.ClientID == device.ClientID && element.ClientID != "" {
 			updatedDevice := c.Devices[key]
 			updatedDevice = device
 			c.Devices[key] = updatedDevice
 			isExist = true
-			//element.Conn.Close()
 			break
 		}
 	}
+	for key, element := range c.Devices {
+		fmt.Printf("element.ClientID is %s \r\n", element.ClientID)
+		fmt.Printf("element.key is %v  \r\n", key)
+		fmt.Print(element.ClientID)
+		if bytes.Equal(element.DeviceID, device.DeviceID) {
+			if element.ClientID != device.ClientID {
+				c.Delete(element)
+			}
+		}
+	}
+
 	if !isExist {
 		return errors.New("device is not exist")
 	}

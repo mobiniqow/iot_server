@@ -14,7 +14,6 @@ import (
 	"github.com/go-kit/kit/log"
 )
 
-// in baraye handle kardane yek device khase na hameye device ha
 type Handler struct {
 	Connection    net.Conn
 	Logger        log.Logger
@@ -37,12 +36,20 @@ func (c *Handler) CloseConnection(Connection net.Conn) {
 	}
 	c.DeviceManager.Delete(c.Device)
 }
+func (c *Handler) DisconnectOldDevice(device device.Device) {
+	// ابتدا دستگاه قدیمی را پیدا می‌کنیم
+	oldDevice, err := c.DeviceManager.GetDeviceByDeviceId(string(device.DeviceID))
+	if err == nil {
+		// دستگاه قدیمی پیدا شد، آن را حذف می‌کنیم
+		c.DeviceManager.Delete(oldDevice)
+		c.Logger.Log("Disconnected old device with DeviceID:", oldDevice.DeviceID)
+	}
+}
 
 func (c *Handler) Start() {
 	go func() {
 		defer c.CloseConnection(c.Connection)
 		go func() {
-			// 3 time request to get id
 			sendMessage := []byte("RG\r\n")
 			c.Device.Conn.Write(sendMessage)
 			time.Sleep(10 * time.Second)
@@ -56,9 +63,7 @@ func (c *Handler) Start() {
 			if !device.IsValid() {
 				c.Device.Conn.Write(sendMessage)
 			}
-
 		}()
-		// buffer for reading data from socket
 		for {
 			buffer := make([]byte, 1024)
 			n, err := c.Connection.Read(buffer)
@@ -72,45 +77,24 @@ func (c *Handler) Start() {
 					c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
 				} else {
 					if _message.Type == strategy.GET_ID {
+						// به‌روزرسانی DeviceID
 						c.Device.DeviceID = []byte(_message.Payload)
+
+						// قطع ارتباط و حذف دستگاه قبلی
+						c.DisconnectOldDevice(c.Device)
+
+						// دستگاه جدید را اضافه کنید
 						c.DeviceManager.Update(c.Device)
-						c.Logger.Log("Received message with ID:", c.Device.DeviceID)
+
+						c.Logger.Log("Received message with new DeviceID:", c.Device.DeviceID)
 						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
 					} else {
+						// اگر پیام نوع دیگری داشت
 						fmt.Printf("\n messageinputelse %x %s \n", _message.Payload, _message.Payload)
 						c.MessageBroker.SendData(string(c.Device.DeviceID), _message)
 					}
 				}
 			}
-			//_type, payload, datetime, err := c.Decoder.Decoder(body)
-			//msg := message.NewMessage(_type, datetime, payload)
-			//if c.Validator.Validate(body) {
-			//	if err != nil {
-			//		c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
-			//	} else {
-			//		// agar payami ke amad moshabeh id bod ono add konam be device haie mojod
-			//		if bytes.Equal(_type, message.GET_ID) {
-			//			c.Device.DeviceID = payload
-			//			c.DeviceManager.Update(c.Device)
-			//			c.Logger.Log("Received message with ID:", c.Device.DeviceID)
-			//		} else {
-			//			if c.Device.IsValid() {
-			//				fmt.Printf("new_device.DeviceID %s \n", string(c.Device.DeviceID))
-			//				c.MessageBroker.SendData(string(c.Device.DeviceID), *msg)
-			//				print("yes bro")
-			//			}
-			//		}
-			//	}
-
-			//if err != nil {
-			//	c.Logger.Log("error from reading data %s from socket: %v", err, c.Connection)
-			//} else {
-			//	_, err := c.Middleware.Inputs(c.Connection, msg)
-			//	if err != nil {
-			//		c.Logger.Log("Get message with error: %v", err)
-			//		return
-			//	}
-			//}
 		}
 	}()
 }
